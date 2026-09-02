@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RazorRisk AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+
+
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark">R</div>
+          <div>
+            <p class="eyebrow">Razorpay AI</p>
+            <h3>RiskOps</h3>
+          </div>
+        </div>
+
+        <!-- <nav class="nav">
+          <a class="nav-link active" href="#">Overview</a>
+          <a class="nav-link" href="#">Transactions</a>
+          <a class="nav-link" href="#">Merchant Watch</a>
+          <a class="nav-link" href="#">Signals</a>
+          <a class="nav-link" href="#">Settings</a>
+        </nav> -->
+
+
+
+<nav class="nav">
+
+  <a
+    href="#"
+    class="nav-link active"
+    data-view="overview"
+  >
+    <span class="nav-icon">⌂</span>
+    <span>Overview</span>
+  </a>
+
+  <a
+    href="#"
+    class="nav-link"
+    data-view="transactions"
+  >
+    <span class="nav-icon">↔</span>
+    <span>Transactions</span>
+  </a>
+
+  <a
+    href="#"
+    class="nav-link"
+    data-view="merchant"
+  >
+    <span class="nav-icon">▣</span>
+    <span>Merchant Watch</span>
+  </a>
+
+  <a
+    href="#"
+    class="nav-link"
+    data-view="signals"
+  >
+    <span class="nav-icon">⌁</span>
+    <span>Signals</span>
+  </a>
+
+  <a
+    href="#"
+    class="nav-link"
+    data-view="settings"
+  >
+    <span class="nav-icon">⚙</span>
+    <span>Settings</span>
+  </a>
+
+</nav>
+
+
+
+        <div class="sidebar-card">
+          <span class="label">System Health</span>
+          <strong>99.97%</strong>
+          <small>Uptime | 24h</small>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Fraud intelligence platform</p>
+            <h1>RazorRisk AI</h1>
+          </div>
+          <div class="topbar-actions">
+            <span class="status-pill">Live risk stream</span>
+            <button class="ghost-button" type="button">Export report</button>
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme">Light</button>
+          </div>
+        </header>
+
+        <section class="hero-panel">
+          <div class="hero-copy">
+            <p class="hero-tag">Enterprise-grade payment defense</p>
+            <h2>Monitor suspicious transactions across merchants, devices, and customer behavior.</h2>
+          </div>
+          <div class="hero-meta">
+            <div class="meta-box">
+              <span>Latency</span>
+              <strong>118ms</strong>
+            </div>
+            <div class="meta-box">
+              <span>Decision engine</span>
+              <strong>Hybrid AI</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="stats-grid">
+          <div class="stat-card danger">
+            <div class="stat-header">
+              <span>Blocked</span>
+              <span class="delta up">+12%</span>
+            </div>
+            <strong>{{ summary.blocked }}</strong>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-header">
+              <span>Review</span>
+              <span class="delta up">+8%</span>
+            </div>
+            <strong>{{ summary.review }}</strong>
+          </div>
+          <div class="stat-card safe">
+            <div class="stat-header">
+              <span>Approved</span>
+              <span class="delta down">-5%</span>
+            </div>
+            <strong>{{ summary.approved }}</strong>
+          </div>
+          <div class="stat-card neutral">
+            <div class="stat-header">
+              <span>Avg risk</span>
+              <span class="delta neutral">stable</span>
+            </div>
+            <strong>{{ summary.average_risk_score }}</strong>
+          </div>
+        </section>
+
+        <section class="analytics-grid">
+          <div class="panel chart-panel">
+            <div class="panel-header">
+              <h3>Decision mix</h3>
+              <span class="chip">24h</span>
+            </div>
+            <div class="chart-bars">
+              {% for item in summary.decision_mix %}
+              <div class="bar-group">
+                <span class="bar-label">{{ item.label }}</span>
+                <div class="bar-track">
+                  <span class="bar-fill {{ item.label.lower() }}" style="height: {{ (item.value / (summary.total_volume or 1)) * 100 }}%"></span>
+                </div>
+                <strong>{{ item.value }}</strong>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="panel chart-panel">
+            <div class="panel-header">
+              <h3>Risk trend</h3>
+              <span class="chip positive">upward</span>
+            </div>
+            <div class="trend-bars">
+              {% for item in summary.risk_trend %}
+              <div class="trend-block">
+                <span class="trend-bar" style="height: {{ item.value }}%"></span>
+                <label>{{ item.label }}</label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+
+        <section class="control-panel panel">
+          <div class="panel-header">
+            <h2>Transaction risk simulator</h2>
+            <span class="chip neutral">Manual test</span>
+          </div>
+          <form id="risk-form" class="risk-form">
+            <div class="field-grid">
+              <label>
+                Customer
+                <input type="text" name="customer_name" value="Sam Patel" />
+              </label>
+              <label>
+                Merchant
+                <input type="text" name="merchant" value="SkyCart" />
+              </label>
+              <label>
+                Amount
+                <input type="number" name="amount" value="12000" />
+              </label>
+              <label>
+                Merchant risk
+                <input type="number" step="0.01" name="merchant_risk_score" value="0.82" />
+              </label>
+              <label>
+                Device risk
+                <input type="number" step="0.01" name="device_risk" value="0.72" />
+              </label>
+              <label>
+                Velocity
+                <input type="number" name="velocity" value="7" />
+              </label>
+              <label>
+                Hour
+                <input type="number" name="transaction_hour" value="2" />
+              </label>
+              <label>
+                Failed attempts
+                <input type="number" name="failure_count" value="2" />
+              </label>
+              <label>
+                Chargebacks
+                <input type="number" name="historical_chargebacks" value="3" />
+              </label>
+              <label class="checkbox-field">
+                <input type="checkbox" name="is_new_customer" checked />
+                New customer
+              </label>
+              <label class="checkbox-field">
+                <input type="checkbox" name="country_mismatch" checked />
+                Country mismatch
+              </label>
+            </div>
+            <button type="submit" class="primary-button">Run risk assessment</button>
+          </form>
+          <div id="risk-result" class="result-box hidden"></div>
+        </section>
+
+        <section class="workspace-grid">
+          <div class="panel large-panel">
+            <div class="panel-header">
+              <h2>Live risk stream</h2>
+              <span class="status-dot">● Live</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Transaction</th>
+                  <th>Customer</th>
+                  <th>Merchant</th>
+                  <th>Amount</th>
+                  <th>Risk</th>
+                  <th>Decision</th>
+                  <th>Reasons</th>
+                </tr>
+              </thead>
+              <tbody id="transaction-body">
+                {% for tx in transactions %}
+                <tr>
+                  <td>{{ tx.transaction_id }}</td>
+                  <td>{{ tx.customer_name }}</td>
+                  <td>{{ tx.merchant }}</td>
+                  <td>₹{{ tx.amount }}</td>
+                  <td>
+                    <span class="score score-{{ 'high' if tx.risk_score >= 75 else 'mid' if tx.risk_score >= 45 else 'low' }}">
+                      {{ tx.risk_score }}
+                    </span>
+                  </td>
+                  <td class="decision {{ tx.decision.lower() }}">{{ tx.decision }}</td>
+                  <td>{{ tx.reasons[0] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <aside class="side-stack">
+            <div class="panel mini-panel">
+              <div class="panel-header">
+                <h3>Operational overview</h3>
+              </div>
+              <div class="metric-row">
+                <span>Transactions</span>
+                <strong>{{ summary.total_volume }}</strong>
+              </div>
+              <div class="metric-row">
+                <span>Risk rate</span>
+                <strong>{{ summary.risk_rate }}%</strong>
+              </div>
+              <div class="metric-row">
+                <span>Escalations</span>
+                <strong>{{ summary.review + summary.blocked }}</strong>
+              </div>
+            </div>
+
+            <div class="panel mini-panel">
+              <div class="panel-header">
+                <h3>Top AI signals</h3>
+              </div>
+              <ul class="signal-list">
+                {% for signal in summary.top_signals %}
+                <li>
+                  <span>{{ signal.label }}</span>
+                  <strong>{{ signal.count }}</strong>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+
+            <div class="panel mini-panel">
+              <div class="panel-header">
+                <h3>Merchant watchlist</h3>
+              </div>
+              <ul class="watchlist">
+                {% for merchant in summary.merchant_watchlist %}
+                <li>
+                  <div>
+                    <strong>{{ merchant.merchant }}</strong>
+                    <small>{{ merchant.events }} events</small>
+                  </div>
+                  <span class="watch-risk">{{ merchant.risk }}</span>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <!-- <script>
+      const form = document.getElementById('risk-form');
+      const resultBox = document.getElementById('risk-result');
+      const tableBody = document.getElementById('transaction-body');
+      const themeToggle = document.getElementById('theme-toggle');
+
+      const savedTheme = localStorage.getItem('razorTheme') || 'dark';
+      document.body.setAttribute('data-theme', savedTheme);
+      themeToggle.textContent = savedTheme === 'dark' ? 'Light' : 'Dark';
+
+      themeToggle.addEventListener('click', () => {
+        const currentTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('razorTheme', currentTheme);
+        themeToggle.textContent = currentTheme === 'dark' ? 'Light' : 'Dark';
+      });
+
+      function scoreClass(score) {
+        if (score >= 75) return 'score-high';
+        if (score >= 45) return 'score-mid';
+        return 'score-low';
+      }
+
+      function decisionClass(decision) {
+        return decision.toLowerCase();
+      }
+
+      function renderTransactions(transactions) {
+        tableBody.innerHTML = transactions.map(tx => `
+          <tr>
+            <td>${tx.transaction_id}</td>
+            <td>${tx.customer_name}</td>
+            <td>${tx.merchant}</td>
+            <td>₹${tx.amount}</td>
+            <td><span class="score ${scoreClass(tx.risk_score)}">${tx.risk_score}</span></td>
+            <td class="decision ${decisionClass(tx.decision)}">${tx.decision}</td>
+            <td>${tx.reasons[0]}</td>
+          </tr>
+        `).join('');
+      }
+
+      async function refreshTransactions() {
+        const response = await fetch('/api/transactions');
+        const data = await response.json();
+        renderTransactions(data.transactions);
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+        payload.is_new_customer = formData.get('is_new_customer') === 'on';
+        payload.country_mismatch = formData.get('country_mismatch') === 'on';
+        payload.amount = Number(payload.amount);
+        payload.merchant_risk_score = Number(payload.merchant_risk_score);
+        payload.device_risk = Number(payload.device_risk);
+        payload.velocity = Number(payload.velocity);
+        payload.transaction_hour = Number(payload.transaction_hour);
+        payload.failure_count = Number(payload.failure_count);
+        payload.historical_chargebacks = Number(payload.historical_chargebacks);
+
+        const response = await fetch('/api/risk/score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        resultBox.classList.remove('hidden');
+        resultBox.innerHTML = `
+          <strong>${result.customer_name}</strong> → ${result.decision} risk (${result.risk_score}/100)
+          <div>${result.reasons.join(' ')}</div>
+        `;
+        await refreshTransactions();
+      });
+
+      refreshTransactions();
+    </script> -->
+
+
+
+
+
+  
+<script>
+  const form = document.getElementById("risk-form");
+  const resultBox = document.getElementById("risk-result");
+  const tableBody = document.getElementById("transaction-body");
+  const themeToggle = document.getElementById("theme-toggle");
+
+  /* ==========================================
+     THEME
+  ========================================== */
+
+  const savedTheme = localStorage.getItem("razorTheme") || "dark";
+
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  document.body.setAttribute("data-theme", savedTheme);
+
+  function updateThemeButton() {
+    const isDark =
+      document.documentElement.getAttribute("data-theme") === "dark";
+
+    themeToggle.textContent = isDark ? "Light" : "Dark";
+  }
+
+  updateThemeButton();
+
+  themeToggle.addEventListener("click", () => {
+    const current =
+      document.documentElement.getAttribute("data-theme");
+
+    const next = current === "dark" ? "light" : "dark";
+
+    document.documentElement.setAttribute("data-theme", next);
+    document.body.setAttribute("data-theme", next);
+
+    localStorage.setItem("razorTheme", next);
+
+    updateThemeButton();
+  });
+
+
+  /* ==========================================
+     SIDEBAR NAVIGATION
+  ========================================== */
+
+  const navLinks = document.querySelectorAll(".nav-link");
+  const views = document.querySelectorAll(".dashboard-view");
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+
+      const target = link.dataset.view;
+
+      navLinks.forEach((item) => {
+        item.classList.remove("active");
+      });
+
+      link.classList.add("active");
+
+      views.forEach((view) => {
+        view.classList.remove("active-view");
+      });
+
+      const selectedView = document.getElementById(
+        `${target}-view`
+      );
+
+      if (selectedView) {
+        selectedView.classList.add("active-view");
+      }
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+  });
+
+
+  /* ==========================================
+     RISK SCORE
+  ========================================== */
+
+  function scoreClass(score) {
+    if (score >= 75) return "score-high";
+    if (score >= 45) return "score-mid";
+    return "score-low";
+  }
+
+  function decisionClass(decision) {
+    return decision.toLowerCase();
+  }
+
+  function renderTransactions(transactions) {
+    tableBody.innerHTML = transactions
+      .map(
+        (tx) => `
+          <tr>
+            <td>${tx.transaction_id}</td>
+            <td>${tx.customer_name}</td>
+            <td>${tx.merchant}</td>
+            <td>₹${tx.amount}</td>
+
+            <td>
+              <span class="score ${scoreClass(tx.risk_score)}">
+                ${tx.risk_score}
+              </span>
+            </td>
+
+            <td class="decision ${decisionClass(tx.decision)}">
+              ${tx.decision}
+            </td>
+
+            <td>${tx.reasons[0]}</td>
+          </tr>
+        `
+      )
+      .join("");
+  }
+
+  async function refreshTransactions() {
+    try {
+      const response = await fetch("/api/transactions");
+      const data = await response.json();
+
+      renderTransactions(data.transactions);
+    } catch (error) {
+      console.error("Unable to refresh transactions:", error);
+    }
+  }
+
+
+  /* ==========================================
+     RISK ASSESSMENT
+  ========================================== */
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData.entries());
+
+    payload.is_new_customer =
+      formData.get("is_new_customer") === "on";
+
+    payload.country_mismatch =
+      formData.get("country_mismatch") === "on";
+
+    payload.amount = Number(payload.amount);
+    payload.merchant_risk_score =
+      Number(payload.merchant_risk_score);
+
+    payload.device_risk =
+      Number(payload.device_risk);
+
+    payload.velocity =
+      Number(payload.velocity);
+
+    payload.transaction_hour =
+      Number(payload.transaction_hour);
+
+    payload.failure_count =
+      Number(payload.failure_count);
+
+    payload.historical_chargebacks =
+      Number(payload.historical_chargebacks);
+
+    try {
+      const response = await fetch("/api/risk/score", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      resultBox.classList.remove("hidden");
+
+      resultBox.innerHTML = `
+        <strong>
+          ${result.customer_name}
+        </strong>
+
+        → ${result.decision} risk
+        (${result.risk_score}/100)
+
+        <div>
+          ${result.reasons.join(" ")}
+        </div>
+      `;
+
+      await refreshTransactions();
+
+    } catch (error) {
+      resultBox.classList.remove("hidden");
+
+      resultBox.innerHTML = `
+        <strong>Assessment failed</strong>
+        <div>Please try again.</div>
+      `;
+
+      console.error(error);
+    }
+  });
+
+
+  /* ==========================================
+     INITIAL LOAD
+  ========================================== */
+
+  refreshTransactions();
+</script>
+
+
+  </body>
+</html>
