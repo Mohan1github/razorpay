@@ -1,5 +1,10 @@
 # RazorRisk AI
 
+Live url -  https://razorpay-umber-iota.vercel.app/
+
+
+
+
 RazorRisk AI is a fintech-focused risk intelligence platform designed for a Razorpay-style hackathon. It combines a rules-based risk engine, model-style confidence scoring, event-driven transaction handling, and an optional LLM explanation layer for analyst-friendly narratives.
 
 ## Product idea
