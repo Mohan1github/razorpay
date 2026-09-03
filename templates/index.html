@@ -329,6 +329,47 @@
             </div>
           </aside>
         </section>
+
+        <section class="network-panel panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">AI investigation layer</p>
+              <h2>Fraud ring signals</h2>
+            </div>
+            <span class="chip danger-chip">Relationship intelligence</span>
+          </div>
+          <div class="network-summary" id="network-summary">
+            <div><strong id="linked-transactions">0</strong><span>linked payments</span></div>
+            <div><strong id="suspicious-clusters">0</strong><span>suspicious clusters</span></div>
+            <div><strong id="critical-clusters">0</strong><span>critical clusters</span></div>
+          </div>
+          <div class="network-list" id="network-list">
+            <p class="empty-state">Waiting for relationship signals...</p>
+          </div>
+        </section>
+
+        <section class="agent-panel panel" id="agent-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Autonomous fraud operations</p>
+              <h2>RiskOps agent</h2>
+            </div>
+            <span class="agent-status" id="agent-status">Monitoring</span>
+          </div>
+          <div class="agent-grid">
+            <div class="agent-finding">
+              <span class="agent-label">Current finding</span>
+              <strong id="agent-finding">Agent is analyzing the payment stream...</strong>
+              <small id="agent-recommendation">Recommendation pending</small>
+            </div>
+            <div class="agent-confidence">
+              <span class="agent-label">Confidence</span>
+              <strong><span id="agent-confidence">0</span>%</strong>
+              <small>Human approval required</small>
+            </div>
+          </div>
+          <div class="agent-actions" id="agent-actions"></div>
+        </section>
       </main>
     </div>
 
@@ -546,6 +587,58 @@
     }
   }
 
+  function renderNetwork(network) {
+    const summary = network.summary || {};
+    document.getElementById("linked-transactions").textContent = summary.linked_transactions || 0;
+    document.getElementById("suspicious-clusters").textContent = summary.suspicious_clusters || 0;
+    document.getElementById("critical-clusters").textContent = summary.critical_clusters || 0;
+
+    const list = document.getElementById("network-list");
+    if (!network.clusters || network.clusters.length === 0) {
+      list.innerHTML = '<p class="empty-state">No connected risk clusters detected.</p>';
+      return;
+    }
+
+    list.innerHTML = network.clusters.map((cluster) => `
+      <article class="network-cluster ${cluster.severity}">
+        <div>
+          <span class="cluster-type">${cluster.entity_type}</span>
+          <strong>${cluster.entity}</strong>
+          <small>${cluster.transactions} linked payments · ${cluster.blocked} blocked</small>
+        </div>
+        <div class="cluster-risk">
+          <strong>${cluster.highest_risk}</strong>
+          <span>peak risk</span>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  async function refreshNetwork() {
+    try {
+      const response = await fetch("/api/network");
+      renderNetwork(await response.json());
+    } catch (error) {
+      console.error("Unable to refresh network signals:", error);
+    }
+  }
+
+  async function refreshAgent() {
+    try {
+      const response = await fetch("/api/agent/investigate");
+      const agent = await response.json();
+      const panel = document.getElementById("agent-panel");
+      panel.dataset.priority = (agent.priority || "low").toLowerCase();
+      document.getElementById("agent-status").textContent = agent.status || "Monitoring";
+      document.getElementById("agent-finding").textContent = agent.finding || "No finding available.";
+      document.getElementById("agent-recommendation").textContent = `Recommended action: ${(agent.recommendation || "MONITOR").replaceAll("_", " ")}`;
+      document.getElementById("agent-confidence").textContent = agent.confidence || 0;
+      document.getElementById("agent-actions").innerHTML = (agent.actions || []).map((action) => `<span>${action}</span>`).join("");
+    } catch (error) {
+      console.error("Unable to refresh RiskOps agent:", error);
+    }
+  }
+
 
   /* ==========================================
      RISK ASSESSMENT
@@ -628,6 +721,11 @@
   ========================================== */
 
   refreshTransactions();
+  refreshNetwork();
+  refreshAgent();
+  setInterval(refreshTransactions, 3000);
+  setInterval(refreshNetwork, 3000);
+  setInterval(refreshAgent, 3000);
 </script>
 
 

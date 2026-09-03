@@ -8,6 +8,8 @@ from flask import Flask, jsonify, render_template, request
 from src.config import APP_CONFIG
 from src.database import count_transactions, fetch_recent_transactions, init_db, save_transaction
 from src.risk_engine import score_transaction, summarize_decision_summary
+from src.network_investigator import build_network
+from src.risk_agent import run_riskops_agent
 from src.stream_processor import EventBusListener, build_event_stream, emit_event
 
 app = Flask(__name__)
@@ -15,14 +17,22 @@ app.config.update(APP_CONFIG)
 
 init_db()
 RISK_EVENTS = build_event_stream()
-EVENT_LISTENER = EventBusListener()
+
+
+def handle_stream_event(event):
+    RISK_EVENTS.insert(0, event)
+    del RISK_EVENTS[20:]
+    save_transaction(event)
+
+
+EVENT_LISTENER = EventBusListener(on_event=handle_stream_event)
 EVENT_LISTENER.start()
 
 
 def build_dashboard_context():
     persisted = fetch_recent_transactions(limit=20)
-    txs = RISK_EVENTS
-    if persisted:
+    txs = list(RISK_EVENTS) if RISK_EVENTS else []
+    if not txs:
         txs = []
         for row in persisted:
             event = dict(row)
@@ -111,6 +121,18 @@ def api_analytics():
     })
 
 
+@app.route('/api/network')
+def api_network():
+    txs, _ = build_dashboard_context()
+    return jsonify(build_network(txs))
+
+
+@app.route('/api/agent/investigate')
+def api_agent_investigate():
+    txs, _ = build_dashboard_context()
+    return jsonify(run_riskops_agent(txs))
+
+
 @app.route('/api/risk/score', methods=['POST'])
 def api_risk_score():
     payload = request.get_json(silent=True) or {}
@@ -135,8 +157,7 @@ def api_risk_score():
     }
 
     enriched = emit_event(tx)
-    RISK_EVENTS.insert(0, enriched)
-    save_transaction(enriched)
+    handle_stream_event(enriched)
     return jsonify(enriched)
 
 
